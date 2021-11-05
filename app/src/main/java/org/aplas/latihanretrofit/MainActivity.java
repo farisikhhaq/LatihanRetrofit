@@ -20,33 +20,39 @@ import org.aplas.latihanretrofit.services.GithubServices;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 public class MainActivity extends AppCompatActivity {
+    Retrofit retrofit;
+    GithubServices service;
+    ActivityMainBinding binding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        ActivityMainBinding binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
-
+        setContentView(R.layout.activity_main);
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl("https://api.github.com/")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
-        GithubServices service = retrofit.create(GithubServices.class);
-        Call<List<Repo>> repos = service.listRepos("hbb.polinema");
+        service = retrofit.create(GithubServices.class);
+     }
+
+    public void handleSend(View view){
+        Call<List<Repo>> repos = service.listRepos(binding.getUsername());
 
         repos.enqueue(new Callback<List<Repo>>() {
             @Override
             public void onResponse(Call<List<Repo>> call, Response<List<Repo>> repoList) {
-                binding.setRepo (repoList.body().get(0));
+                List<Repo> results = repoList.body();
+                if(results != null && repoList.isSuccessful()){
+                    binding.setRepo (results.get(0));
+                }
             }
 
             @Override
             public void onFailure(Call<List<Repo>> call, Throwable t) {
-                Log.e("Error",t.getMessage());
+                Log.e(MainActivity.class.getCanonicalName(), t.getMessage());
             }
         });
-     }
-
-    public void handleSend(View view) {
     }
 }
